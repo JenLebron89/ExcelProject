@@ -1,0 +1,53 @@
+
+function main(workbook: ExcelScript.Workbook) {
+    let table1 = workbook.getTable("Table1");
+    let selectedSheet = workbook.getActiveWorksheet();
+    selectedSheet.setName("AllModules");
+    // selectedSheet.getRange("G10").setValue("Testing");
+
+    //Read Column G, create list of modules
+    console.log("Getting unique modules list");
+    let modStart: string = "G2"
+    let modRange: ExcelScript.Range = selectedSheet.getRange(modStart).getExtendedRange(ExcelScript.KeyboardDirection.down);
+    let modVals: string[][] = modRange.getValues() as string[][];
+    let tempArr: string[] = modVals.map(e => e[0]);
+    let uniqueModVals: string[] = Array.from(new Set(tempArr));
+
+    //print names to console for debug
+    uniqueModVals.forEach(uniqueModVal => {
+        console.log(uniqueModVal)
+    });
+
+    // Create a Sheet for each separate module
+    console.log("Creating Sheets for each Module.");
+
+    let counter = 0;
+    uniqueModVals.forEach(modulename => {
+        //filter current sheet
+        table1.getColumnByName("Give Feedback for Module:").getFilter().applyValuesFilter([modulename]);
+
+        // create a copy 
+        let ws = selectedSheet.copy(ExcelScript.WorksheetPositionType.after, selectedSheet);
+
+        //rename (Modules must have code between parentheses)
+        let startInd = uniqueModVals[counter].indexOf("(") + 1;
+        let endInd = uniqueModVals[counter].toString().indexOf(")");
+        let sheetName = uniqueModVals[counter].toString().substring(startInd, endInd);
+        ws.setName(sheetName);
+
+        //increment counter
+        counter++;
+
+        //success
+        console.log("Sheet named: " + sheetName);
+    });
+
+    // Clear filter on table table1 column "Give Feedback for Module:"
+    table1.getColumnByName("Give Feedback for Module:").getFilter().clear();
+
+
+    // // Get the value of cell G2.
+    // let range = selectedSheet.getRange("G2");
+    // console.log(range.getValues()[0].toString());
+
+}
